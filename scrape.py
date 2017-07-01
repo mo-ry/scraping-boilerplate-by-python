@@ -1,6 +1,7 @@
 import os
 import time
 import settings
+import boto3
 import selenium
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -36,6 +37,8 @@ def scrape():
     driver.get(settings.TARGET_URL)
     time.sleep(5)
 
+    count = 0
+    items = {}
     next_page_link = driver.find_element_by_xpath(settings.NEXT_PAGE_LINK_XPATH)
 
     while next_page_link:
@@ -43,8 +46,11 @@ def scrape():
         targets = driver.find_elements_by_xpath(settings.TARGET_XPATH)
 
         if targets:
-            for i in range(len(targets)):
-                print(targets[i].text)
+            for j in range(len(targets)):
+                if targets[j].text:
+                    items[count] = {'ID' : count, 'Key' : targets[j].text}
+                    count += 1
+
         else:
             print("No target element")
 
@@ -54,4 +60,15 @@ def scrape():
     driver.close()
     driver.quit()
 
-scrape()
+    return items
+
+def save(items):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(settings.TABLE_NAME)
+    for i in range(len(items)):
+        table.put_item(
+            Item = items[i]
+        )
+
+items = scrape()
+save(items)
