@@ -1,5 +1,7 @@
 .env
+.docker-compose.env
 __pycache__
 .cache
 .python_history
 .bash_history
+/mysql

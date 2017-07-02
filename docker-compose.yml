@@ -1,0 +1,21 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.6
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    environment:
+      MYSQL_DATABASE: app
+    env_file:
+      - ./.docker-compose.env
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/conf:/etc/mysql/mysql.conf.d
+  app:
+    build: .
+    command: python scrape.py
+    volumes:
+      - .:/code
+    depends_on:
+      - db
