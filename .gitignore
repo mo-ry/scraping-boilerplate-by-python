@@ -4,4 +4,4 @@ __pycache__
 .cache
 .python_history
 .bash_history
-/mysql
+/mysql/data
