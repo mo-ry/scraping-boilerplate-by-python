@@ -1,6 +1,7 @@
 import os
 import time
 import settings
+import MySQLdb
 import selenium
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -38,13 +39,14 @@ def scrape():
 
     next_page_link = driver.find_element_by_xpath(settings.NEXT_PAGE_LINK_XPATH)
 
+    items = []
     while next_page_link:
         next_page_link = driver.find_element_by_xpath(settings.NEXT_PAGE_LINK_XPATH)
         targets = driver.find_elements_by_xpath(settings.TARGET_XPATH)
 
         if targets:
             for i in range(len(targets)):
-                print(targets[i].text)
+                if targets[i].text: items.append((targets[i].text))
         else:
             print("No target element")
 
@@ -54,4 +56,30 @@ def scrape():
     driver.close()
     driver.quit()
 
-scrape()
+    return items
+
+def save(items):
+    conn = MySQLdb.connect(
+        user = settings.DB_USER,
+        passwd = settings.DB_PASSWORD,
+        host = settings.DB_HOST,
+        db = settings.DB_NAME,
+        use_unicode = True,
+        charset = "utf8"
+    )
+    cursor = conn.cursor()
+
+    sql = 'CREATE TABLE IF NOT EXISTS ' + settings.TABLE_NAME + ' (id INT PRIMARY KEY AUTO_INCREMENT, key VARCHAR(255))'
+    cursor.execute(sql)
+
+    sql = 'INSERT INTO ' + settings.TABLE_NAME + ' (key) VALUES (%s)'
+    cursor.executemany(sql, items)
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+if __name__ == "__main__":
+    items = scrape()
+    save(items)

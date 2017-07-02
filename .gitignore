@@ -1,4 +1,4 @@
-.env
+.python.env
 .docker-compose.env
 __pycache__
 .cache
